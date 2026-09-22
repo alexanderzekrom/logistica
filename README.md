@@ -1,11 +1,13 @@
 # Sistema de Logística y Envíos
 
-Backend Python (FastAPI) + Frontend HTML/JavaScript organizado en módulos.
+Backend Python (FastAPI) + Frontend React con TypeScript.
 
 ## Requisitos
 
-- Python 3.14.4
+- Python 3.12+
+- Node.js 22+
 - MySQL 8.0+ (o MariaDB compatible)
+- Docker y Docker Compose (opcional)
 
 ## Estructura del Proyecto
 
@@ -25,41 +27,61 @@ prueba/
 │   │   ├── vehiculos.py    # Endpoints de vehículos
 │   │   └── pedidos.py      # Endpoints de pedidos
 │   ├── main.py             # Punto de entrada de la aplicación
-│   └── __init__.py
-├── frontend/               # Frontend (HTML/CSS/JS)
-│   ├── index.html          # Página principal
-│   ├── css/                # Estilos
-│   ├── js/                 # JavaScript
-│   └── assets/             # Imágenes y recursos
+│   └── Dockerfile
+├── frontend-react/         # Frontend React + TypeScript
+│   ├── src/                # Código fuente
+│   │   ├── components/     # Componentes React
+│   │   ├── pages/          # Páginas
+│   │   ├── api.ts          # Cliente API
+│   │   └── types.ts        # Tipos TypeScript
+│   ├── package.json        # Dependencias Node
+│   ├── vite.config.ts      # Configuración Vite
+│   └── Dockerfile
 ├── data/                   # Datos y scripts SQL
-│   └── baseDatos_corregido-v2.txt
+│   └── baseDatos_corregido-v2.sql
 ├── docs/                   # Documentación
-│   └── dependencias.txt
-├── venv/                   # Entorno virtual Python
+├── .env.example            # Variables de entorno ejemplo
+├── docker-compose.yml      # Configuración Docker
 ├── requirements.txt        # Dependencias Python
 └── README.md              # Este archivo
 ```
 
-## Instalación
+## Instalación con Docker (Recomendado)
 
-### 1. Crear entorno virtual
+### 1. Copiar archivo de entorno
 
 ```bash
+cp .env.example .env
+```
+
+### 2. Levantar servicios
+
+```bash
+docker-compose up -d
+```
+
+Los servicios estarán disponibles en:
+- Backend: `http://localhost:8000`
+- Frontend: `http://localhost:8001`
+- Base de datos: `localhost:3307`
+
+## Instalación Manual
+
+### Backend
+
+```bash
+# Crear entorno virtual
 python3 -m venv venv
 source venv/bin/activate  # Linux/Mac
 # o
 venv\Scripts\activate     # Windows
-```
 
-### 2. Instalar dependencias
-
-```bash
+# Instalar dependencias
 pip install -r requirements.txt
+
+# Configurar base de datos MySQL
+mysql -u root -p
 ```
-
-### 3. Configurar base de datos MySQL
-
-Crear base de datos `logistica_db` y usuario `app_user` con contraseña `password123`:
 
 ```sql
 CREATE DATABASE logistica_db;
@@ -68,35 +90,29 @@ GRANT ALL PRIVILEGES ON logistica_db.* TO 'app_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-O modificar la URL en `backend/config/database.py` según tu configuración.
-
-### 4. Ejecutar script de base de datos (opcional)
-
 ```bash
-mysql -u app_user -p logistica_db < data/baseDatos_corregido-v2.txt
-```
+# Ejecutar script de base de datos
+mysql -u app_user -p logistica_db < data/baseDatos_corregido-v2.sql
 
-## Ejecución
-
-### Backend
-
-```bash
+# Ejecutar backend
 cd backend
 python main.py
 ```
 
-El servidor se iniciará en `http://localhost:8000`
-
-### Frontend
-
-Opción 1: Servidor HTTP simple
+### Frontend React
 
 ```bash
-cd frontend
-python3 -m http.server 8001
-```
+cd frontend-react
 
-Opción 2: Abrir directamente `frontend/index.html` en el navegador
+# Instalar dependencias
+npm install
+
+# Desarrollo
+npm run dev
+
+# Build para producción
+npm run build
+```
 
 ## API Endpoints
 

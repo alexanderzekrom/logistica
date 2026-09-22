@@ -7,7 +7,11 @@ DATABASE_URL = os.getenv(
     "mysql+pymysql://app_user:password123@localhost:3306/logistica_db"
 )
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"charset": "utf8mb4"}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
