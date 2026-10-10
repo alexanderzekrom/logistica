@@ -26,7 +26,7 @@ frontend-react/.vite/
 .env.local
 
 # Documentation
-docs/
+docs/v
 *.md
 !README.md
 

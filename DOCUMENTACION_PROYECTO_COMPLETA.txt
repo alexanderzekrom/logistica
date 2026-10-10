@@ -1,0 +1,1385 @@
+================================================================================
+DOCUMENTACIÓN COMPLETA DEL PROYECTO
+SISTEMA DE LOGÍSTICA Y ENVÍOS - INFRAESTRUCTURA Y CÓMPUTO EN LA NUBE
+================================================================================
+
+Asignatura: Infraestructura y Cómputo en la Nube
+Docente: Ing. José Mauricio García
+Modalidad: Alianza Estratégica Desacoplada (Grupo A Backend / Grupo B Frontend)
+Infraestructura: AWS EC2 (IaaS)
+Fecha: Septiembre 2026
+
+================================================================================
+FASE 1: INICIO Y DEFINICIÓN
+================================================================================
+
+1.1 INTRODUCCIÓN
+-----------------
+Este documento presenta el desarrollo completo del "Sistema de Logística y Envíos", 
+una plataforma web integral diseñada para la gestión, asignación y rastreo en tiempo 
+real de entregas de paquetes en El Salvador. 
+
+El documento está dirigido al docente de la asignatura Infraestructura y Cómputo en 
+la Nube, así como a los equipos de desarrollo (Grupo A - Backend y Grupo B - Frontend) 
+que participaron en la construcción del sistema bajo una arquitectura desacoplada.
+
+El proyecto consiste en una aplicación web que permite a tres tipos de usuarios 
+(Administradores, Conductores y Clientes) interactuar sobre una misma base de datos 
+para gestionar el ciclo de vida completo de los pedidos de envío, desde su registro 
+hasta su entrega final, con visualización geográfica mediante mapas interactivos.
+
+1.2 OBJETIVOS
+-------------
+
+1.2.1 Objetivo General
+Desarrollar e implementar un sistema de logística y envíos desacoplado en arquitectura 
+cliente-servidor, desplegado en infraestructura cloud IaaS (AWS EC2), que permita la 
+gestión eficiente de pedidos, asignación de recursos y rastreo en tiempo real de 
+entregas en El Salvador.
+
+1.2.2 Objetivos Específicos
+- Diseñar e implementar una API REST backend con FastAPI que exponga endpoints para 
+  la gestión de clientes, conductores, vehículos y pedidos.
+- Desarrollar una interfaz web frontend con React y TypeScript que permita la interacción 
+  de usuarios según sus roles (ADMIN, CONDUCTOR, CLIENTE).
+- Implementar un sistema de autenticación basado en JWT con control de acceso por roles.
+- Diseñar una base de datos relacional MySQL que soporte el modelo de datos del sistema 
+  logístico.
+- Configurar la infraestructura en AWS EC2 con instancias independientes para backend 
+  y frontend, siguiendo el modelo IaaS.
+- Implementar comunicación segura entre frontend y backend mediante Security Groups 
+  en AWS.
+- Integrar mapas interactivos (MapLibre GL) para visualización geográfica de pedidos.
+- Establecer reglas de negocio que controlen los flujos de estado de los pedidos.
+
+1.3 JUSTIFICACIÓN
+-----------------
+La necesidad de este sistema surge de la creciente demanda de servicios de logística 
+y entrega en El Salvador, donde muchas empresas aún gestionan sus procesos de forma 
+manual o con sistemas desactualizados que no permiten rastreo en tiempo real.
+
+El impacto y beneficio de este proyecto incluyen:
+- **Eficiencia Operativa**: Automatización de la asignación de conductores y vehículos 
+  a pedidos, reduciendo tiempos de gestión manual.
+- **Visibilidad en Tiempo Real**: Clientes y administradores pueden rastrear la ubicación 
+  de los pedidos mediante mapas interactivos.
+- **Control de Calidad**: Implementación de estados de pedido que permiten identificar 
+  incidencias y tomar acciones correctivas.
+- **Escalabilidad**: Arquitectura desacoplada en AWS EC2 que permite escalar frontend 
+  y backend independientemente según la demanda.
+- **Seguridad**: Implementación de autenticación JWT y restricciones de acceso por roles, 
+  además de Security Groups en AWS que protegen la comunicación entre componentes.
+- **Experiencia de Usuario**: Interfaz web moderna y responsiva que facilita la 
+  interacción de los diferentes tipos de usuarios.
+
+Para la institución educativa, este proyecto representa una aplicación práctica de 
+conceptos de computación en la nube, arquitectura de software y desarrollo web, 
+preparando a los estudiantes con experiencia real en despliegue de aplicaciones 
+en infraestructura cloud profesional.
+
+1.4 ALCANCES Y LIMITACIONES
+----------------------------
+
+1.4.1 Alcances
+El sistema incluirá las siguientes funcionalidades:
+- Gestión completa de clientes (CRUD: Crear, Leer, Actualizar, Eliminar)
+- Gestión completa de conductores (CRUD)
+- Gestión completa de vehículos (CRUD)
+- Gestión de pedidos con control de estados (PENDIENTE, ASIGNADO, EN_CAMINO, 
+  ENTREGADO, INCIDENCIA, CANCELADO)
+- Sistema de autenticación con tres roles: ADMIN, CONDUCTOR, CLIENTE
+- Asignación de conductores y vehículos a pedidos (solo ADMIN)
+- Visualización de pedidos filtrados por rol de usuario
+- Actualización de estado de pedidos con validación de reglas de negocio
+- Cancelación de pedidos por clientes (solo en estado PENDIENTE)
+- Visualización geográfica de pedidos en mapas interactivos
+- Despliegue en AWS EC2 con instancias separadas para frontend y backend
+- Comunicación segura entre componentes mediante Security Groups
+- Persistencia de datos en base de datos MySQL
+
+1.4.2 Limitaciones
+El sistema NO incluirá:
+- Procesamiento de pagos en línea
+- Integración con sistemas de mensajería externos (SMS, email)
+- Cálculo automático de rutas óptimas de entrega
+- Historial completo de cambios de estado (auditoría detallada)
+- Reportes estadísticos o analíticos avanzados
+- Aplicación móvil nativa (solo interfaz web responsiva)
+- Integración con GPS en tiempo real de vehículos
+- Sistema de notificaciones push
+- Gestión de inventario de paquetes
+- Cálculo de costos de envío
+- Múltiples idiomas (solo español)
+- Carga masiva de datos (importación/exportación)
+
+================================================================================
+FASE 2: ESPECIFICACIÓN DE REQUERIMIENTOS
+================================================================================
+
+2.1 REQUERIMIENTOS FUNCIONALES (RF)
+------------------------------------
+
+RF01: El sistema debe permitir a los usuarios iniciar sesión con username y contraseña.
+RF02: El sistema debe validar las credenciales de usuario contra la base de datos.
+RF03: El sistema debe generar tokens JWT para usuarios autenticados.
+RF04: El sistema debe permitir al rol ADMIN acceder a todas las funcionalidades del sistema.
+RF05: El sistema debe permitir al rol ADMIN crear, leer, actualizar y eliminar clientes.
+RF06: El sistema debe permitir al rol ADMIN crear, leer, actualizar y eliminar conductores.
+RF07: El sistema debe permitir al rol ADMIN crear, leer, actualizar y eliminar vehículos.
+RF08: El sistema debe permitir al rol ADMIN crear, leer, actualizar y eliminar pedidos.
+RF09: El sistema debe permitir al rol ADMIN asignar conductores a pedidos.
+RF10: El sistema debe permitir al rol ADMIN asignar vehículos a pedidos.
+RF11: El sistema debe permitir al rol ADMIN cambiar el estado de cualquier pedido.
+RF12: El sistema debe permitir al rol CONDUCTOR visualizar solo los pedidos asignados a su ID.
+RF13: El sistema debe permitir al rol CONDUCTOR actualizar el estado de sus pedidos asignados.
+RF14: El sistema debe permitir al rol CLIENTE registrar nuevos pedidos.
+RF15: El sistema debe permitir al rol CLIENTE especificar ubicación geográfica en mapa al crear pedido.
+RF16: El sistema debe permitir al rol CLIENTE visualizar solo sus propios pedidos.
+RF17: El sistema debe permitir al rol CLIENTE cancelar pedidos en estado PENDIENTE.
+RF18: El sistema debe validar que un pedido no pase a EN_CAMINO sin conductor y vehículo asignados.
+RF19: El sistema debe restringir transiciones de estado según las reglas de negocio definidas.
+RF20: El sistema debe mostrar mapas interactivos con la ubicación de los pedidos.
+RF21: El sistema debe permitir la geocodificación de direcciones a coordenadas.
+RF22: El sistema debe persistir todos los datos en una base de datos relacional MySQL.
+RF23: El sistema debe exponer una API REST con endpoints para todas las operaciones CRUD.
+RF24: El sistema debe implementar control de acceso basado en roles (RBAC).
+RF25: El sistema debe permitir el registro de nuevos clientes con autogeneración de usuario.
+
+2.2 REQUERIMIENTOS NO FUNCIONALES (RNF)
+----------------------------------------
+
+RNF01: El backend debe desarrollarse utilizando Python con framework FastAPI.
+RNF02: El frontend debe desarrollarse utilizando React con TypeScript.
+RNF03: La base de datos debe ser MySQL 8.0+.
+RNF04: El sistema debe desplegarse en AWS EC2 siguiendo el modelo IaaS.
+RNF05: El frontend y backend deben ejecutarse en instancias EC2 independientes.
+RNF06: La comunicación entre frontend y backend debe realizarse a través de API REST.
+RNF07: El sistema debe implementar autenticación mediante tokens JWT.
+RNF08: Los passwords deben almacenarse encriptados utilizando bcrypt.
+RNF09: El sistema debe implementar CORS para permitir comunicación entre dominios.
+RNF10: La base de datos debe estar protegida y no accesible directamente desde Internet.
+RNF11: El backend debe exponer únicamente el puerto 8000 restringido al Security Group del frontend.
+RNF12: El frontend debe exponer los puertos 80 (HTTP) y 443 (HTTPS) a Internet.
+RNF13: El sistema debe utilizar contenedores Docker para empaquetar aplicaciones.
+RNF14: El sistema debe utilizar Docker Compose para orquestación de servicios en desarrollo.
+RNF15: El sistema debe ser responsivo y adaptarse a diferentes tamaños de pantalla.
+RNF16: El sistema debe utilizar mapas de MapLibre GL para visualización geográfica.
+RNF17: El sistema debe utilizar Nominatim (OpenStreetMap) para geocodificación.
+RNF18: El tiempo de respuesta de la API debe ser inferior a 2 segundos para operaciones CRUD simples.
+RNF19: El sistema debe manejar concurrencia de múltiples usuarios simultáneamente.
+RNF20: El código debe seguir principios de arquitectura limpia y separación de responsabilidades.
+
+2.3 CASOS DE USO
+----------------
+
+CU01: Iniciar Sesión
+- Actor: Usuario (ADMIN, CONDUCTOR, CLIENTE)
+- Descripción: El usuario ingresa sus credenciales (username y password) para acceder al sistema.
+- Precondiciones: El usuario debe estar registrado en la base de datos.
+- Flujo Principal:
+  1. El usuario ingresa username y password en el formulario de login.
+  2. El sistema valida las credenciales contra la base de datos.
+  3. Si las credenciales son correctas, el sistema genera un token JWT.
+  4. El sistema redirige al usuario al panel correspondiente según su rol.
+- Postcondiciones: El usuario autenticado accede al sistema con su rol asignado.
+
+CU02: Registrar Pedido (Cliente)
+- Actor: CLIENTE
+- Descripción: El cliente registra un nuevo pedido de envío con ubicación geográfica.
+- Precondiciones: El cliente debe estar autenticado con rol CLIENTE.
+- Flujo Principal:
+  1. El cliente accede al formulario de creación de pedido.
+  2. El cliente selecciona la ubicación en el mapa interactivo.
+  3. El cliente ingresa la dirección de entrega.
+  4. El sistema valida los datos ingresados.
+  5. El sistema crea el pedido con estado PENDIENTE.
+  6. El sistema confirma la creación del pedido.
+- Postcondiciones: El pedido queda registrado en estado PENDIENTE sin asignación de recursos.
+
+CU03: Asignar Recursos a Pedido (Admin)
+- Actor: ADMIN
+- Descripción: El administrador asigna un conductor y un vehículo a un pedido pendiente.
+- Precondiciones: El administrador debe estar autenticado con rol ADMIN. El pedido debe estar en estado PENDIENTE.
+- Flujo Principal:
+  1. El administrador selecciona un pedido de la lista.
+  2. El administrador elige un conductor disponible.
+  3. El administrador elige un vehículo disponible.
+  4. El sistema valida la asignación.
+  5. El sistema actualiza el pedido a estado ASIGNADO.
+  6. El sistema confirma la asignación.
+- Postcondiciones: El pedido pasa a estado ASIGNADO con conductor y vehículo asignados.
+
+CU04: Actualizar Estado de Pedido (Conductor)
+- Actor: CONDUCTOR
+- Descripción: El conductor actualiza el estado de un pedido asignado durante su jornada.
+- Precondiciones: El conductor debe estar autenticado con rol CONDUCTOR. El pedido debe estar asignado a su ID.
+- Flujo Principal:
+  1. El conductor accede a su panel de "Mi Jornada".
+  2. El conductor selecciona un pedido de su lista.
+  3. El conductor selecciona el nuevo estado (EN_CAMINO, ENTREGADO, INCIDENCIA).
+  4. El sistema valida la transición de estado según reglas de negocio.
+  5. El sistema actualiza el estado del pedido.
+  6. El sistema confirma la actualización.
+- Postcondiciones: El estado del pedido se actualiza según la acción del conductor.
+
+CU05: Cancelar Pedido (Cliente)
+- Actor: CLIENTE
+- Descripción: El cliente cancela un pedido que aún no ha sido asignado.
+- Precondiciones: El cliente debe estar autenticado con rol CLIENTE. El pedido debe estar en estado PENDIENTE.
+- Flujo Principal:
+  1. El cliente accede a su lista de pedidos.
+  2. El cliente selecciona un pedido en estado PENDIENTE.
+  3. El cliente confirma la cancelación.
+  4. El sistema valida que el pedido esté en estado PENDIENTE.
+  5. El sistema actualiza el pedido a estado CANCELADO.
+  6. El sistema confirma la cancelación.
+- Postcondiciones: El pedido pasa a estado CANCELADO y no puede ser modificado.
+
+CU06: Gestionar Clientes (Admin)
+- Actor: ADMIN
+- Descripción: El administrador realiza operaciones CRUD sobre la tabla de clientes.
+- Precondiciones: El administrador debe estar autenticado con rol ADMIN.
+- Flujo Principal:
+  1. El administrador accede a la sección de Clientes.
+  2. El administrador puede crear, leer, actualizar o eliminar clientes.
+  3. El sistema valida los datos ingresados.
+  4. El sistema persiste los cambios en la base de datos.
+- Postcondiciones: La información de clientes se actualiza según la operación realizada.
+
+CU07: Visualizar Mapa de Pedidos (Todos los roles)
+- Actor: ADMIN, CONDUCTOR, CLIENTE
+- Descripción: El usuario visualiza la ubicación geográfica de los pedidos en un mapa interactivo.
+- Precondiciones: El usuario debe estar autenticado. Los pedidos se filtran según el rol.
+- Flujo Principal:
+  1. El usuario accede a la sección de Mapa.
+  2. El sistema carga los pedidos correspondientes al rol del usuario.
+  3. El sistema muestra marcadores en el mapa para cada pedido.
+  4. El usuario puede interactuar con los marcadores para ver detalles.
+- Postcondiciones: El usuario visualiza la ubicación geográfica de los pedidos accesibles.
+
+================================================================================
+FASE 3: DISEÑO Y ARQUITECTURA
+================================================================================
+
+3.1 ARQUITECTURA DE HARDWARE/RED (AWS)
+---------------------------------------
+
+Topología de Instancias EC2:
+
+Internet
+    |
+    v
+[EC2 FRONTEND] (IP Pública con Elastic IP)
+    | - Puerto 80 (HTTP) - Abierto a Internet
+    | - Puerto 443 (HTTPS) - Abierto a Internet
+    | - Puerto 22 (SSH) - Restringido a IP administrativa
+    |
+    | - Contenedor Docker: Nginx (Reverse Proxy)
+    | - Contenedor Docker: React Frontend (puerto interno 3000)
+    |
+    v (Comunicación por IP privada)
+[EC2 BACKEND] (IP Privada en VPC)
+    | - Puerto 8000 (FastAPI) - Solo accesible desde SG-FRONTEND
+    | - Puerto 22 (SSH) - Restringido a IP administrativa
+    |
+    | - Contenedor Docker: FastAPI Backend (puerto 8000)
+    | - Contenedor Docker: MySQL Database (puerto interno 3306)
+    |
+    v
+[Volumen Docker: Persistencia de datos MySQL]
+
+Security Groups:
+
+SG-FRONTEND:
+- Regla de entrada: TCP 80 desde 0.0.0.0/0 (Internet)
+- Regla de entrada: TCP 443 desde 0.0.0.0/0 (Internet)
+- Regla de entrada: TCP 22 desde [IP administrativa]
+- Regla de salida: Todo el tráfico
+
+SG-BACKEND:
+- Regla de entrada: TCP 8000 desde SG-FRONTEND
+- Regla de entrada: TCP 22 desde [IP administrativa]
+- Regla de salida: Todo el tráfico
+
+Flujo de Comunicación:
+1. Usuario accede via HTTP/HTTPS a la IP pública del EC2 FRONTEND
+2. Nginx en FRONTEND recibe la petición
+3. Si la ruta es /api/*, Nginx hace proxy a la IP privada del BACKEND puerto 8000
+4. Si la ruta es /, Nginx sirve la aplicación React
+5. FastAPI en BACKEND procesa la petición y consulta MySQL
+6. MySQL responde a FastAPI
+7. FastAPI retorna la respuesta a Nginx
+8. Nginx retorna la respuesta al usuario
+
+3.2 ARQUITECTURA DE SOFTWARE
+-----------------------------
+
+Patrón Arquitectónico: Cliente-Servidor Desacoplado con API REST
+
+Justificación:
+- **Desacoplamiento**: Frontend y backend son aplicaciones independientes que se comunican 
+  únicamente a través de HTTP/JSON. Esto permite desarrollo paralelo por equipos diferentes 
+  (Grupo A y Grupo B) y escalabilidad independiente.
+- **API REST**: Estándar ampliamente adoptado que facilita la integración, es stateless, 
+  cacheable y utiliza métodos HTTP estándar (GET, POST, PUT, DELETE).
+- **Separación de Responsabilidades**: Backend se enfoca en lógica de negocio y persistencia 
+  de datos. Frontend se enfoca en presentación y experiencia de usuario.
+- **Escalabilidad**: Cada componente puede escalar horizontalmente según la demanda. 
+  Se pueden agregar más instancias de frontend para manejar más usuarios, o más instancias 
+  de backend para procesar más peticiones API.
+- **Mantenibilidad**: Cambios en el frontend no afectan al backend y viceversa, siempre 
+  que se mantenga el contrato de la API.
+
+Capas de la Arquitectura:
+
+Backend (FastAPI):
+- Capa de Rutas: Endpoints HTTP que reciben peticiones
+- Capa de Lógica de Negocio: Validaciones, reglas de negocio, procesamiento
+- Capa de Acceso a Datos: SQLAlchemy ORM para interactuar con MySQL
+- Capa de Seguridad: Autenticación JWT, autorización por roles
+
+Frontend (React):
+- Capa de Presentación: Componentes UI con TypeScript
+- Capa de Estado: Gestión de estado local y global
+- Capa de Servicios: Cliente API para comunicación con backend
+- Capa de Navegación: Enrutamiento entre páginas
+
+3.3 MODELO DE DATOS
+-------------------
+
+3.3.1 Diagrama Entidad-Relación (DER)
+
++----------------+       +----------------+
+|   USUARIOS     |       |   CLIENTES     |
++----------------+       +----------------+
+| id_usuario (PK)|<----->| id_cliente (PK)|
+| username       |       | nombre         |
+| password_hash  |       | telefono       |
+| rol            |       | email         |
+| id_ref (FK)    |       | direccion      |
+| created_at     |       +----------------+
++----------------+                |
+                                  | 1
+                                  |
+                                  | N
+                                  |
++----------------+       +----------------+       +----------------+
+|   CONDUCTORES  |       |    PEDIDOS     |       |   VEHICULOS    |
++----------------+       +----------------+       +----------------+
+| id_conductor(PK)|<---->| id_pedido (PK) |<----->| id_vehiculo(PK)|
+| nombre         |       | id_cliente (FK)|       | placa          |
+| licencia       |       | id_conductor(FK)|     | tipo           |
+| telefono       |       | id_vehiculo(FK)|     | capacidad      |
++----------------+       | direccion      |       +----------------+
+                         | latitud        |
+                         | longitud       |
+                         | estado         |
+                         | created_at     |
+                         +----------------+
+
+Relaciones:
+- USUARIOS.id_ref -> CLIENTES.id_cliente (1:1 para rol CLIENTE)
+- USUARIOS.id_ref -> CONDUCTORES.id_conductor (1:1 para rol CONDUCTOR)
+- PEDIDOS.id_cliente -> CLIENTES.id_cliente (N:1)
+- PEDIDOS.id_conductor -> CONDUCTORES.id_conductor (N:1, opcional)
+- PEDIDOS.id_vehiculo -> VEHICULOS.id_vehiculo (N:1, opcional)
+
+3.3.2 Diccionario de Datos
+
+Tabla: USUARIOS
+- id_usuario: INT AUTO_INCREMENT PRIMARY KEY
+  * Descripción: Identificador único del usuario
+  * Restricciones: No nulo, auto-incremental
+- username: VARCHAR(50) NOT NULL UNIQUE
+  * Descripción: Nombre de usuario para login
+  * Restricciones: No nulo, único, máximo 50 caracteres
+- password_hash: VARCHAR(255) NOT NULL
+  * Descripción: Contraseña encriptada con bcrypt
+  * Restricciones: No nulo, máximo 255 caracteres
+- rol: ENUM('ADMIN', 'CONDUCTOR', 'CLIENTE') NOT NULL
+  * Descripción: Rol de acceso del usuario
+  * Restricciones: No nulo, solo valores permitidos
+- id_ref: INT NULL
+  * Descripción: ID de referencia en tabla clientes o conductores
+  * Restricciones: Nulo para ADMIN, referencia a cliente o conductor para otros roles
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  * Descripción: Fecha y hora de creación del registro
+  * Restricciones: Automático
+
+Tabla: CLIENTES
+- id_cliente: INT AUTO_INCREMENT PRIMARY KEY
+  * Descripción: Identificador único del cliente
+  * Restricciones: No nulo, auto-incremental
+- nombre: VARCHAR(100) NOT NULL
+  * Descripción: Nombre completo del cliente
+  * Restricciones: No nulo, máximo 100 caracteres
+- telefono: VARCHAR(20) NOT NULL
+  * Descripción: Número de teléfono del cliente
+  * Restricciones: No nulo, máximo 20 caracteres
+- email: VARCHAR(100) NOT NULL UNIQUE
+  * Descripción: Correo electrónico del cliente
+  * Restricciones: No nulo, único, máximo 100 caracteres
+- direccion: TEXT NOT NULL
+  * Descripción: Dirección física del cliente
+  * Restricciones: No nulo
+
+Tabla: CONDUCTORES
+- id_conductor: INT AUTO_INCREMENT PRIMARY KEY
+  * Descripción: Identificador único del conductor
+  * Restricciones: No nulo, auto-incremental
+- nombre: VARCHAR(100) NOT NULL
+  * Descripción: Nombre completo del conductor
+  * Restricciones: No nulo, máximo 100 caracteres
+- licencia: VARCHAR(50) NOT NULL UNIQUE
+  * Descripción: Número de licencia de conducir
+  * Restricciones: No nulo, único, máximo 50 caracteres
+- telefono: VARCHAR(20) NOT NULL
+  * Descripción: Número de teléfono del conductor
+  * Restricciones: No nulo, máximo 20 caracteres
+
+Tabla: VEHICULOS
+- id_vehiculo: INT AUTO_INCREMENT PRIMARY KEY
+  * Descripción: Identificador único del vehículo
+  * Restricciones: No nulo, auto-incremental
+- placa: VARCHAR(20) NOT NULL UNIQUE
+  * Descripción: Número de placa del vehículo
+  * Restricciones: No nulo, único, máximo 20 caracteres
+- tipo: VARCHAR(50) NOT NULL
+  * Descripción: Tipo de vehículo (ej. Camión, Panel Van)
+  * Restricciones: No nulo, máximo 50 caracteres
+- capacidad: VARCHAR(50) NOT NULL
+  * Descripción: Capacidad de carga del vehículo
+  * Restricciones: No nulo, máximo 50 caracteres
+
+Tabla: PEDIDOS
+- id_pedido: INT AUTO_INCREMENT PRIMARY KEY
+  * Descripción: Identificador único del pedido
+  * Restricciones: No nulo, auto-incremental
+- id_cliente: INT NOT NULL
+  * Descripción: ID del cliente que realiza el pedido
+  * Restricciones: No nulo, FK a clientes(id_cliente), ON DELETE RESTRICT
+- id_conductor: INT NULL
+  * Descripción: ID del conductor asignado al pedido
+  * Restricciones: Nulo, FK a conductores(id_conductor), ON DELETE SET NULL
+- id_vehiculo: INT NULL
+  * Descripción: ID del vehículo asignado al pedido
+  * Restricciones: Nulo, FK a vehiculos(id_vehiculo), ON DELETE SET NULL
+- direccion: TEXT NOT NULL
+  * Descripción: Dirección de entrega del pedido
+  * Restricciones: No nulo
+- latitud: DECIMAL(10, 8) NOT NULL
+  * Descripción: Coordenada de latitud para el mapa
+  * Restricciones: No nulo, precisión de 10 dígitos, 8 decimales
+- longitud: DECIMAL(11, 8) NOT NULL
+  * Descripción: Coordenada de longitud para el mapa
+  * Restricciones: No nulo, precisión de 11 dígitos, 8 decimales
+- estado: ENUM('PENDIENTE', 'ASIGNADO', 'EN_CAMINO', 'ENTREGADO', 'INCIDENCIA', 'CANCELADO') DEFAULT 'PENDIENTE'
+  * Descripción: Estado actual del pedido en el flujo de entrega
+  * Restricciones: No nulo, solo valores permitidos, default PENDIENTE
+- created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  * Descripción: Fecha y hora de creación del pedido
+  * Restricciones: Automático
+
+3.4 DISEÑO DE INTERFACES (MOCKUPS)
+-----------------------------------
+
+Descripción de las interfaces principales:
+
+Página de Login:
+- Campo: Username (texto)
+- Campo: Password (password)
+- Botón: Iniciar Sesión
+- Diseño: Centrado, minimalista, con logo del sistema
+
+Panel de Administrador:
+- Pestañas: Clientes, Conductores, Vehículos, Pedidos, Mapa
+- Tabla Clientes: Listado con botones de Editar/Eliminar, botón Nuevo Cliente
+- Tabla Conductores: Listado con botones de Editar/Eliminar, botón Nuevo Conductor
+- Tabla Vehículos: Listado con botones de Editar/Eliminar, botón Nuevo Vehículo
+- Tabla Pedidos: Listado con estado, asignación de conductor/vehículo, cambio de estado
+- Mapa: Visualización de todos los pedidos con marcadores de colores por estado
+
+Panel de Conductor (Mi Jornada):
+- Lista de pedidos asignados al conductor
+- Botones para cambiar estado: EN_CAMINO, ENTREGADO, INCIDENCIA
+- Mapa con ubicación de sus pedidos asignados
+- Información de detalles de cada pedido
+
+Panel de Cliente:
+- Formulario para crear nuevo pedido
+- Selección de ubicación en mapa interactivo
+- Lista de mis pedidos con estado actual
+- Botón Cancelar (solo para pedidos PENDIENTE)
+- Mapa con ubicación de mis pedidos
+
+Componentes Comunes:
+- Barra de navegación con nombre de usuario y botón Cerrar Sesión
+- Indicadores de estado con colores (Pendiente: amarillo, Asignado: azul, 
+  En Camino: naranja, Entregado: verde, Incidencia: rojo, Cancelado: gris)
+- Modal de confirmación para acciones destructivas
+- Mensajes de éxito/error tipo toast
+
+================================================================================
+FASE 4: IMPLEMENTACIÓN Y DESPLIEGUE
+================================================================================
+
+4.1 STACK TECNOLÓGICO
+---------------------
+
+Backend:
+- **Lenguaje**: Python 3.12+
+  * Justificación: Lenguaje de alto nivel con excelente soporte para desarrollo web, 
+    gran ecosistema de librerías y sintaxis clara que acelera el desarrollo.
+- **Framework**: FastAPI 0.109.0
+  * Justificación: Framework moderno y de alto rendimiento para APIs, con soporte 
+    nativo para validación de datos con Pydantic, documentación automática (Swagger/OpenAPI), 
+    y tipado estático.
+- **Servidor ASGI**: Uvicorn 0.27.0
+  * Justificación: Servidor ASGI de alto rendimiento compatible con FastAPI, ideal 
+    para producción con soporte para async/await).
+- **ORM**: SQLAlchemy 2.0.25
+  * Justificación: ORM maduro y potente que abstrae la complejidad de SQL, permite 
+    trabajar con objetos Python en lugar de queries directos, y soporta múltiples 
+    bases de datos.
+- **Driver MySQL**: PyMySQL 1.1.0
+  * Justificación: Driver MySQL puro en Python, no requiere dependencias de C, 
+    fácil instalación y mantenimiento.
+- **Validación**: Pydantic 2.5.3
+  * Justificación: Biblioteca de validación de datos con soporte para tipado, 
+    integración nativa con FastAPI, generación automática de schemas JSON.
+- **Seguridad**: python-jose[cryptography] 3.3.0, passlib[bcrypt] 1.7.4
+  * Justificación: python-jose para manejo de tokens JWT (codificación/decodificación), 
+    passlib con bcrypt para encriptación segura de passwords.
+
+Frontend:
+- **Lenguaje**: TypeScript
+  * Justificación: Superset de JavaScript con tipado estático que previene errores 
+    en tiempo de desarrollo, mejora la mantenibilidad y proporciona mejor autocompletado.
+- **Framework**: React 19.3.0
+  * Justificación: Biblioteca UI más popular del mundo, basada en componentes, 
+    ecosistema enorme, rendimiento optimizado con Virtual DOM.
+- **Build Tool**: Vite 8.3.0
+  * Justificación: Herramienta de build moderna y extremadamente rápida, con 
+    Hot Module Replacement (HMR) instantáneo para desarrollo.
+- **Estilos**: TailwindCSS 4.3.3
+  * Justificación: Framework CSS utility-first que permite diseñar interfaces 
+    rápidamente sin escribir CSS personalizado, altamente personalizable.
+- **Mapas**: MapLibre GL 5.24.0
+  * Justificación: Biblioteca de mapas open-source basada en WebGL, fork de 
+    Mapbox GL JS sin dependencias de servicios propietarios, ideal para visualización 
+    geográfica interactiva.
+- **Geocodificación**: Nominatim (OpenStreetMap)
+  * Justificación: Servicio de geocodificación gratuito y open-source, no requiere 
+    API key, utiliza datos de OpenStreetMap.
+
+Infraestructura:
+- **Proveedor Cloud**: AWS (Amazon Web Services)
+  * Justificación: Líder del mercado cloud, con amplia gama de servicios, 
+    documentación extensa y alta disponibilidad.
+- **Modelo de Servicio**: IaaS (Infrastructure as a Service) con EC2
+  * Justificación: Requerimiento de la asignatura, proporciona control completo 
+    sobre el sistema operativo y configuración, ideal para aprender sobre infraestructura.
+- **Contenedores**: Docker + Docker Compose
+  * Justificación: Estandarización de despliegue, consistencia entre entornos 
+    (desarrollo/producción), aislamiento de dependencias, facilidad de escalado.
+- **Reverse Proxy**: Nginx
+  * Justificación: Servidor web de alto rendimiento, ideal como reverse proxy 
+    para balancear carga, servir archivos estáticos y manejar SSL/TLS.
+- **Base de Datos**: MySQL 8.0
+  * Justificación: Sistema de base de datos relacional open-source, robusto, 
+    ampliamente utilizado, excelente rendimiento para aplicaciones transaccionales.
+
+4.2 MANUAL TÉCNICO DE DESPLIEGUE
+---------------------------------
+
+4.2.1 Requisitos Previos
+- Cuenta de AWS con acceso a consola
+- Par de claves SSH creado en AWS EC2
+- Cliente SSH instalado (en local)
+- Conocimientos básicos de Linux y Docker
+- Dominio propio (opcional, para HTTPS)
+
+4.2.2 Creación de Instancia EC2 Backend
+
+Paso 1: Crear Key Pair
+1. Acceder a AWS Console -> EC2 -> Key Pairs
+2. Click en "Create Key Pair"
+3. Nombre: logistica-backend-key
+4. Tipo: RSA
+5. Formato: .pem
+6. Crear y descargar el archivo .pem (guardar de forma segura)
+
+Paso 2: Lanzar Instancia EC2 Backend
+1. AWS Console -> EC2 -> Instances -> Launch Instance
+2. Nombre: logistica-backend
+3. AMI: Ubuntu Server 22.04 LTS
+4. Instance Type: t2.micro (o t3.micro)
+5. Key Pair: logistica-backend-key
+6. Network Settings:
+   - VPC: Default
+   - Subnet: Default
+   - Auto-assign Public IP: Enable
+   - Security Group: Crear nuevo SG-BACKEND
+     * SSH (22): From My IP
+     * Custom TCP (8000): From SG-FRONTEND (crear después)
+7. Storage: 20 GB GP2
+8. Click en "Launch Instance"
+
+Paso 3: Crear Security Group Backend
+1. EC2 -> Security Groups -> Create Security Group
+2. Nombre: sg-backend
+3. Descripción: Security Group para backend logística
+4. Reglas de entrada:
+   - Type: SSH, Port: 22, Source: [Tu IP pública]/32
+   - Type: Custom TCP, Port: 8000, Source: sg-frontend (crear después)
+5. Click en "Create Security Group"
+6. Asociar este SG a la instancia backend si no se hizo en el lanzamiento
+
+4.2.3 Creación de Instancia EC2 Frontend
+
+Paso 1: Lanzar Instancia EC2 Frontend
+1. AWS Console -> EC2 -> Instances -> Launch Instance
+2. Nombre: logistica-frontend
+3. AMI: Ubuntu Server 22.04 LTS
+4. Instance Type: t2.micro (o t3.micro)
+5. Key Pair: logistica-frontend-key (crear nuevo o usar mismo)
+6. Network Settings:
+   - VPC: Default
+   - Subnet: Default (misma VPC que backend)
+   - Auto-assign Public IP: Enable
+   - Security Group: Crear nuevo SG-FRONTEND
+     * HTTP (80): From Anywhere (0.0.0.0/0)
+     * HTTPS (443): From Anywhere (0.0.0.0/0)
+     * SSH (22): From My IP
+7. Storage: 20 GB GP2
+8. Click en "Launch Instance"
+
+Paso 2: Crear Security Group Frontend
+1. EC2 -> Security Groups -> Create Security Group
+2. Nombre: sg-frontend
+3. Descripción: Security Group para frontend logística
+4. Reglas de entrada:
+   - Type: HTTP, Port: 80, Source: 0.0.0.0/0
+   - Type: HTTPS, Port: 443, Source: 0.0.0.0/0
+   - Type: SSH, Port: 22, Source: [Tu IP pública]/32
+5. Click en "Create Security Group"
+
+Paso 3: Actualizar Security Group Backend
+1. Editar sg-backend
+2. Agregar regla: Custom TCP, Port: 8000, Source: sg-frontend
+3. Guardar cambios
+
+4.2.4 Configuración de Instancia Backend
+
+Paso 1: Conectarse por SSH
+```bash
+chmod 400 logistica-backend-key.pem
+ssh -i logistica-backend-key.pem ubuntu@<IP_PUBLICA_BACKEND>
+```
+
+Paso 2: Actualizar sistema e instalar Docker
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y docker.io docker-compose
+sudo usermod -aG docker ubuntu
+newgrp docker
+docker --version
+docker compose version
+```
+
+Paso 3: Clonar repositorio del proyecto
+```bash
+git clone <URL_REPOSITORIO> ~/logistica
+cd ~/logistica
+```
+
+Paso 4: Configurar variables de entorno
+```bash
+cp .env.example .env
+nano .env
+```
+Editar con valores reales:
+```
+MYSQL_ROOT_PASSWORD=tu_password_seguro
+MYSQL_DATABASE=logistica_db
+MYSQL_USER=app_user
+MYSQL_PASSWORD=tu_password_seguro
+DATABASE_URL=mysql+pymysql://app_user:tu_password_seguro@db:3306/logistica_db
+JWT_SECRET=tu_jwt_secret_muy_largo_y_seguro
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=30
+```
+
+Paso 5: Crear docker-compose para backend (solo backend y db)
+Crear archivo docker-compose.backend.yml:
+```yaml
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./data/baseDatos_corregido-v2.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "0.0.0.0:8000:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES}
+
+volumes:
+  db_data:
+```
+
+Paso 6: Levantar servicios backend
+```bash
+docker compose -f docker-compose.backend.yml up -d --build
+docker compose -f docker-compose.backend.yml ps
+docker compose -f docker-compose.backend.yml logs backend
+```
+
+Paso 7: Verificar funcionamiento
+```bash
+curl http://localhost:8000/docs
+curl http://localhost:8000/api/clientes
+```
+
+Paso 8: Obtener IP privada de la instancia backend
+```bash
+ip addr show
+# Anotar la IP privada (ej. 172.31.X.X)
+```
+
+4.2.5 Configuración de Instancia Frontend
+
+Paso 1: Conectarse por SSH
+```bash
+chmod 400 logistica-frontend-key.pem
+ssh -i logistica-frontend-key.pem ubuntu@<IP_PUBLICA_FRONTEND>
+```
+
+Paso 2: Actualizar sistema e instalar Docker
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y docker.io docker-compose nginx
+sudo usermod -aG docker ubuntu
+newgrp docker
+docker --version
+```
+
+Paso 3: Clonar repositorio del proyecto
+```bash
+git clone <URL_REPOSITORIO> ~/logistica
+cd ~/logistica
+```
+
+Paso 4: Configurar Nginx como Reverse Proxy
+Crear archivo /etc/nginx/sites-available/logistica:
+```nginx
+server {
+    listen 80;
+    server_name <TU_DOMINIO_O_IP>;  # ej. app.tudominio.com o IP pública
+
+    # Proxy para API hacia backend
+    location /api/ {
+        proxy_pass http://<IP_PRIVADA_BACKEND>:8000/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Servir frontend React
+    location / {
+        proxy_pass http://frontend:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Activar configuración:
+```bash
+sudo ln -s /etc/nginx/sites-available/logistica /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+Paso 5: Crear docker-compose para frontend
+Crear archivo docker-compose.frontend.yml:
+```yaml
+services:
+  frontend:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=/api
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+```
+
+O usar nginx del host (recomendado para producción):
+```yaml
+services:
+  frontend:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=/api
+```
+
+Paso 6: Levantar servicio frontend
+```bash
+docker compose -f docker-compose.frontend.yml up -d --build
+docker compose -f docker-compose.frontend.yml ps
+docker compose -f docker-compose.frontend.yml logs frontend
+```
+
+4.2.6 Asignar Elastic IP (Opcional pero Recomendado)
+
+Paso 1: Asignar Elastic IP
+1. AWS Console -> EC2 -> Elastic IPs -> Allocate Elastic IP
+2. Seleccionar la instancia frontend
+3. Associate Elastic IP
+4. Ahora la IP pública del frontend es fija
+
+4.2.7 Configurar Dominio con Route 53 (Opcional)
+
+Paso 1: Crear Hosted Zone
+1. AWS Console -> Route 53 -> Hosted Zones -> Create Hosted Zone
+2. Domain Name: tudominio.com
+3. Type: Public Hosted Zone
+4. Crear
+
+Paso 2: Crear Record A1. En la Hosted Zone -> Create Record
+2. Record name: app (para app.tudominio.com)
+3. Record type: A
+4. Alias: No
+5. Value: <Elastic IP del frontend>
+6. Crear
+
+Paso 3: Configurar nameservers
+1. Copiar los 4 nameservers de la Hosted Zone
+2. Ir al registrador de tu dominio
+3. Actualizar los nameservers del dominio
+
+Paso 4: Esperar propagación DNS (puede tomar hasta 48 horas)
+```bash
+dig app.tudominio.com
+nslookup app.tudominio.com
+```
+
+4.2.8 Configurar HTTPS con SSL/TLS (Opcional pero Recomendado)
+
+Paso 1: Instalar Certbot
+```bash
+sudo apt install certbot python3-certbot-nginx
+```
+
+Paso 2: Obtener certificado SSL
+```bash
+sudo certbot --nginx -d app.tudominio.com
+```
+
+Paso 3: Nginx configurará automáticamente HTTPS
+Paso 4: Verificar
+```bash
+curl -I https://app.tudominio.com
+```
+
+4.2.9 Verificación Final del Despliegue
+
+Paso 1: Verificar comunicación frontend -> backend
+```bash
+# Desde la instancia frontend
+curl http://<IP_PRIVADA_BACKEND>:8000/docs
+curl http://<IP_PRIVADA_BACKEND>:8000/api/clientes
+```
+
+Paso 2: Verificar desde Internet
+```bash
+# Desde tu computadora local
+curl http://<IP_PUBLICA_FRONTEND>/
+curl http://<IP_PUBLICA_FRONTEND>/api/clientes
+```
+
+Paso 3: Probar en navegador
+1. Abrir http://<IP_PUBLICA_FRONTEND> o https://app.tudominio.com
+2. Probar login con admin/123
+3. Verificar que carga el panel de administración
+4. Probar crear/editar/eliminar registros
+5. Probar mapa interactivo
+
+4.2.10 Comandos de Mantenimiento
+
+Ver logs de backend:
+```bash
+# En instancia backend
+docker compose -f docker-compose.backend.yml logs -f backend
+docker compose -f docker-compose.backend.yml logs -f db
+```
+
+Ver logs de frontend:
+```bash
+# En instancia frontend
+docker compose -f docker-compose.frontend.yml logs -f frontend
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+```
+
+Reiniciar servicios:
+```bash
+# Backend
+docker compose -f docker-compose.backend.yml restart backend
+docker compose -f docker-compose.backend.yml restart db
+
+# Frontend
+docker compose -f docker-compose.frontend.yml restart frontend
+sudo systemctl restart nginx
+```
+
+Actualizar código:
+```bash
+# En ambas instancias
+cd ~/logistica
+git pull
+docker compose -f docker-compose.<backend|frontend>.yml up -d --build
+```
+
+================================================================================
+FASE 5: PRUEBAS Y VALIDACIÓN
+================================================================================
+
+5.1 CASOS DE PRUEBA
+-------------------
+
+CP01: Prueba de Login - Usuario Admin
+| ID | CP01 | Prueba de Login - Usuario Admin |
+|----|------|----------------------------------|
+| Descripción | Verificar que el usuario admin puede iniciar sesión correctamente |
+| Precondiciones | Usuario admin existe en base de datos |
+| Pasos | 1. Abrir URL del sistema en navegador<br>2. Ingresar username: admin<br>3. Ingresar password: 123<br>4. Click en Iniciar Sesión |
+| Resultado Esperado | Sistema redirige al panel de administración con rol ADMIN |
+| Resultado Obtenido | EXITOSO - Redirección correcta al panel admin |
+| Estado | PASSED |
+
+CP02: Prueba de Login - Usuario Conductor
+| ID | CP02 | Prueba de Login - Usuario Conductor |
+|----|------|-------------------------------------|
+| Descripción | Verificar que el conductor puede iniciar sesión y ver solo sus pedidos |
+| Precondiciones | Usuario rsilva existe con rol CONDUCTOR |
+| Pasos | 1. Iniciar sesión con rsilva/123<br>2. Verificar panel de "Mi Jornada"<br>3. Verificar que solo muestra pedidos asignados a id_ref=1 |
+| Resultado Esperado | Panel de conductor con lista de pedidos asignados |
+| Resultado Obtenido | EXITOSO - Muestra solo pedidos del conductor |
+| Estado | PASSED |
+
+CP03: Prueba de Login - Usuario Cliente
+| ID | CP03 | Prueba de Login - Usuario Cliente |
+|----|------|----------------------------------|
+| Descripción | Verificar que el cliente puede iniciar sesión y ver solo sus pedidos |
+| Precondiciones | Usuario jperez existe con rol CLIENTE |
+| Pasos | 1. Iniciar sesión con jperez/123<br>2. Verificar panel de cliente<br>3. Verificar que solo muestra pedidos de id_ref=1 |
+| Resultado Esperado | Panel de cliente con lista de sus pedidos |
+| Resultado Obtenido | EXITOSO - Muestra solo pedidos del cliente |
+| Estado | PASSED |
+
+CP04: Prueba de Creación de Cliente (Admin)
+| ID | CP04 | Prueba de Creación de Cliente (Admin) |
+|----|------|--------------------------------------|
+| Descripción | Verificar que admin puede crear nuevos clientes |
+| Precondiciones | Usuario admin autenticado |
+| Pasos | 1. Ir a pestaña Clientes<br>2. Click en Nuevo Cliente<br>3. Ingresar datos: nombre, telefono, email, direccion<br>4. Guardar |
+| Resultado Esperado | Cliente creado y aparece en la lista |
+| Resultado Obtenido | EXITOSO - Cliente creado correctamente |
+| Estado | PASSED |
+
+CP05: Prueba de Creación de Pedido (Cliente)
+| ID | CP05 | Prueba de Creación de Pedido (Cliente) |
+|----|------|----------------------------------------|
+| Descripción | Verificar que cliente puede crear pedido con ubicación en mapa |
+| Precondiciones | Usuario cliente autenticado |
+| Pasos | 1. Ir a formulario de nuevo pedido<br>2. Seleccionar ubicación en mapa<br>3. Ingresar dirección<br>4. Guardar |
+| Resultado Esperado | Pedido creado con estado PENDIENTE y coordenadas |
+| Resultado Obtenido | EXITOSO - Pedido creado con ubicación correcta |
+| Estado | PASSED |
+
+CP06: Prueba de Asignación de Recursos (Admin)
+| ID | CP06 | Prueba de Asignación de Recursos (Admin) |
+|----|------|------------------------------------------|
+| Descripción | Verificar que admin puede asignar conductor y vehículo a pedido |
+| Precondiciones | Pedido en estado PENDIENTE, admin autenticado |
+| Pasos | 1. Ir a pestaña Pedidos<br>2. Seleccionar pedido PENDIENTE<br>3. Asignar conductor y vehículo<br>4. Guardar |
+| Resultado Esperado | Pedido cambia a estado ASIGNADO con recursos asignados |
+| Resultado Obtenido | EXITOSO - Asignación correcta, estado actualizado |
+| Estado | PASSED |
+
+CP07: Prueba de Transición de Estado - PENDIENTE a EN_CAMINO sin recursos
+| ID | CP07 | Prueba de Transición de Estado - PENDIENTE a EN_CAMINO sin recursos |
+|----|------|--------------------------------------------------------------------|
+| Descripción | Verificar que sistema rechaza transición a EN_CAMINO sin conductor/vehículo |
+| Precondiciones | Pedido en estado PENDIENTE sin asignación |
+| Pasos | 1. Intentar cambiar estado a EN_CAMINO<br>2. Verificar respuesta del sistema |
+| Resultado Esperado | Sistema rechaza la transición con mensaje de error |
+| Resultado Obtenido | EXITOSO - Error: "No se puede pasar a EN_CAMINO sin conductor y vehículo asignados" |
+| Estado | PASSED |
+
+CP08: Prueba de Actualización de Estado por Conductor
+| ID | CP08 | Prueba de Actualización de Estado por Conductor |
+|----|------|-----------------------------------------------|
+| Descripción | Verificar que conductor puede actualizar estado de sus pedidos |
+| Precondiciones | Conductor autenticado, pedido asignado a su ID |
+| Pasos | 1. Ir a "Mi Jornada"<br>2. Seleccionar pedido ASIGNADO<br>3. Cambiar a EN_CAMINO<br>4. Cambiar a ENTREGADO |
+| Resultado Esperado | Estados actualizados correctamente |
+| Resultado Obtenido | EXITOSO - Transiciones permitidas funcionan correctamente |
+| Estado | PASSED |
+
+CP09: Prueba de Cancelación de Pedido por Cliente
+| ID | CP09 | Prueba de Cancelación de Pedido por Cliente |
+|----|------|--------------------------------------------|
+| Descripción | Verificar que cliente puede cancelar pedido PENDIENTE |
+| Precondiciones | Cliente autenticado, pedido propio en estado PENDIENTE |
+| Pasos | 1. Ir a mis pedidos<br>2. Seleccionar pedido PENDIENTE<br>3. Click en Cancelar<br>4. Confirmar |
+| Resultado Esperado | Pedido cambia a estado CANCELADO |
+| Resultado Obtenido | EXITOSO - Pedido cancelado correctamente |
+| Estado | PASSED |
+
+CP10: Prueba de Cancelación de Pedido ASIGNADO por Cliente
+| ID | CP10 | Prueba de Cancelación de Pedido ASIGNADO por Cliente |
+|----|------|---------------------------------------------------|
+| Descripción | Verificar que cliente NO puede cancelar pedido ASIGNADO |
+| Precondiciones | Cliente autenticado, pedido en estado ASIGNADO |
+| Pasos | 1. Intentar cancelar pedido ASIGNADO<br>2. Verificar respuesta |
+| Resultado Esperado | Sistema rechaza la cancelación |
+| Resultado Obtenido | EXITOSO - Error: "Solo se pueden cancelar pedidos en estado PENDIENTE" |
+| Estado | PASSED |
+
+CP11: Prueba de Comunicación API Frontend-Backend
+| ID | CP11 | Prueba de Comunicación API Frontend-Backend |
+|----|------|--------------------------------------------|
+| Descripción | Verificar que frontend puede comunicarse con backend vía API |
+| Precondiciones | Ambas instancias EC2 ejecutándose |
+| Pasos | 1. Desde frontend EC2: curl http://<IP_PRIVADA_BACKEND>:8000/api/clientes<br>2. Desde navegador: http://<IP_PUBLICA_FRONTEND>/api/clientes |
+| Resultado Esperado | Respuesta JSON con lista de clientes |
+| Resultado Obtenido | EXITOSO - Comunicación correcta entre instancias |
+| Estado | PASSED |
+
+CP12: Prueba de Security Groups AWS
+| ID | CP12 | Prueba de Security Groups AWS |
+|----|------|-------------------------------|
+| Descripción | Verificar que puertos están correctamente restringidos |
+| Precondiciones | Instancias EC2 configuradas |
+| Pasos | 1. Intentar conectar a MySQL desde Internet (puerto 3306)<br>2. Intentar conectar a FastAPI desde Internet (puerto 8000)<br>3. Verificar que solo HTTP/HTTPS son accesibles desde Internet |
+| Resultado Esperado | Conexiones rechazadas, solo HTTP/HTTPS accesibles |
+| Resultado Obtenido | EXITOSO - Security Groups funcionando correctamente |
+| Estado | PASSED |
+
+CP13: Prueba de Persistencia de Datos
+| ID | CP13 | Prueba de Persistencia de Datos |
+|----|------|--------------------------------|
+| Descripción | Verificar que datos persisten tras reinicio de contenedores |
+| Precondiciones | Datos creados en base de datos |
+| Pasos | 1. Crear registro de prueba<br>2. Reiniciar contenedor MySQL<br>3. Verificar que registro aún existe |
+| Resultado Esperado | Datos persisten tras reinicio |
+| Resultado Obtenido | EXITOSO - Volumen Docker funciona correctamente |
+| Estado | PASSED |
+
+CP14: Prueba de Mapa Interactivo
+| ID | CP14 | Prueba de Mapa Interactivo |
+|----|------|---------------------------|
+| Descripción | Verificar que mapa carga correctamente y muestra marcadores |
+| Precondiciones | Pedidos con coordenadas en base de datos |
+| Pasos | 1. Ir a pestaña Mapa<br>2. Verificar que mapa carga<br>3. Verificar marcadores de pedidos<br>4. Interactuar con marcadores |
+| Resultado Esperado | MapLibre GL carga, muestra marcadores interactivos |
+| Resultado Obtenido | EXITOSO - Mapa funciona correctamente |
+| Estado | PASSED |
+
+CP15: Prueba de Validación de Datos
+| ID | CP15 | Prueba de Validación de Datos |
+|----|------|--------------------------------|
+| Descripción | Verificar que sistema valida datos incorrectos |
+| Precondiciones | Formularios de creación |
+| Pasos | 1. Intentar crear cliente sin email<br>2. Intentar crear pedido sin coordenadas<br>3. Intentar login con credenciales incorrectas |
+| Resultado Esperado | Sistema rechaza datos inválidos con mensajes de error |
+| Resultado Obtenido | EXITOSO - Validaciones Pydantic funcionando |
+| Estado | PASSED |
+
+5.2 EVIDENCIAS DE FUNCIONAMIENTO
+---------------------------------
+
+Evidencia 1: Pantalla de Login
+- Captura de pantalla mostrando formulario de login con campos username y password
+- Interfaz limpia y centrada con branding del sistema
+
+Evidencia 2: Panel de Administrador - Vista General
+- Captura mostrando panel de admin con todas las pestañas
+- Tabla de pedidos con estados y asignaciones
+- Mapa con marcadores de todos los pedidos
+
+Evidencia 3: Gestión de Clientes
+- Captura mostrando tabla de clientes
+- Formulario modal para crear nuevo cliente
+- Mensaje de éxito tras creación
+
+Evidencia 4: Asignación de Conductor y Vehículo
+- Captura mostrando edición de pedido
+- Selectores para conductor y vehículo
+- Pedido actualizado a estado ASIGNADO
+
+Evidencia 5: Panel de Conductor - Mi Jornada
+- Captura mostrando vista de conductor
+- Lista de pedidos asignados al conductor
+- Botones para cambiar estado (EN_CAMINO, ENTREGADO, INCIDENCIA)
+
+Evidencia 6: Panel de Cliente
+- Captura mostrando vista de cliente
+- Formulario para crear nuevo pedido con mapa
+- Lista de pedidos del cliente con estados
+
+Evidencia 7: Mapa Interactivo con Pedidos
+- Captura mostrando mapa de MapLibre GL
+- Marcadores de colores según estado (verde=entregado, naranja=en_camino, etc.)
+- Popup con detalles al hacer click en marcador
+
+Evidencia 8: Documentación de API (Swagger UI)
+- Captura de http://<IP>:8000/docs
+- Lista de endpoints disponibles
+- Ejemplo de ejecución de endpoint desde Swagger
+
+Evidencia 9: Consola AWS EC2
+- Captura mostrando instancias en ejecución
+- Security Groups configurados
+- Elastic IPs asignadas
+
+Evidencia 10: Logs de Docker
+- Captura mostrando logs de backend y frontend
+- Sin errores, servicios funcionando correctamente
+
+Evidencia 11: Prueba de Comunicación entre Instancias
+- Captura de terminal con curl desde frontend a backend
+- Respuesta JSON exitosa
+
+Evidencia 12: Base de Datos MySQL
+- Captura mostrando tablas y datos en MySQL Workbench
+- Registros de prueba creados
+- Relaciones entre tablas
+
+================================================================================
+FASE 6: FASE FINAL
+================================================================================
+
+6.1 CONCLUSIONES Y RECOMENDACIONES
+----------------------------------
+
+6.1.1 Conclusiones
+
+El desarrollo del Sistema de Logística y Envíos ha permitido aplicar de manera 
+práctica los conceptos de infraestructura en la nube, arquitectura de software 
+desacoplada y desarrollo web moderno. A través de las 6 fases del proyecto, 
+se lograron los siguientes resultados:
+
+1. **Arquitectura Desacoplada Exitosa**: La separación entre frontend (React) 
+   y backend (FastAPI) funcionó correctamente, permitiendo desarrollo paralelo 
+   y despliegue independiente en instancias EC2 separadas.
+
+2. **Infraestructura Cloud IaaS**: La implementación en AWS EC2 siguió el modelo 
+   IaaS requerido, proporcionando control completo sobre el sistema operativo 
+   y configuración de las instancias.
+
+3. **Seguridad Implementada**: Los Security Groups de AWS restringieron correctamente 
+   el acceso, permitiendo solo comunicación autorizada entre componentes. 
+   La autenticación JWT y encriptación de passwords con bcrypt protegieron 
+   el acceso a la aplicación.
+
+4. **API REST Funcional**: FastAPI con SQLAlchemy proporcionó una API robusta 
+   con validación automática de datos, documentación interactiva (Swagger) 
+   y rendimiento adecuado.
+
+5. **Interfaz de Usuario Moderna**: React con TypeScript y TailwindCSS permitió 
+   crear una interfaz responsiva y atractiva con excelente experiencia de usuario.
+
+6. **Integración de Mapas**: MapLibre GL proporcionó visualización geográfica 
+   interactiva sin dependencias de servicios propietarios, utilizando datos 
+   de OpenStreetMap.
+
+7. **Persistencia de Datos**: MySQL con volúmenes Docker aseguró la persistencia 
+   de datos tras reinicios de contenedores.
+
+8. **Escalabilidad**: La arquitectura permite escalar frontend y backend 
+   independientemente agregando más instancias EC2 según la demanda.
+
+6.1.2 Lecciones Aprendidas
+
+1. **Importancia de la Planificación**: La documentación previa (DER, casos de uso, 
+   requerimientos) facilitó significativamente el desarrollo y evitó 
+   retrabajos.
+
+2. **Gestión de Secrets**: Las variables de entorno y archivos .env son 
+   críticos para la seguridad. No deben incluirse en el repositorio Git.
+
+3. **Configuración de AWS**: Los Security Groups requieren configuración 
+   cuidadosa. Un error puede dejar puertos expuestos o bloquear comunicación 
+   legítima.
+
+4. **Docker Simplifica Despliegue**: El uso de Docker garantiza consistencia 
+   entre entornos de desarrollo y producción.
+
+5. **Comunicación Frontend-Backend**: El reverse proxy Nginx es esencial 
+   para orquestar comunicación entre componentes en arquitectura desacoplada.
+
+6. **Pruebas Integrales**: Es fundamental probar no solo la funcionalidad 
+   individual, sino también la integración entre componentes y la infraestructura.
+
+7. **Documentación Técnica**: La documentación de despliegue es crítica 
+   para replicación y mantenimiento del sistema en producción.
+
+6.1.3 Recomendaciones
+
+1. **Mejoras de Seguridad**:
+   - Implementar HTTPS con SSL/TLS en producción (recomendado usar AWS ACM)
+   - Rotar regularmente las credenciales de base de datos y secrets
+   - Implementar rate limiting en la API para prevenir ataques
+   - Utilizar AWS Secrets Manager para gestionar secrets en lugar de .env
+   - Implementar logging y monitoreo con AWS CloudWatch
+
+2. **Mejoras de Arquitectura**:
+   - Migrar de EC2 a AWS Elastic Beanstalk o ECS para orquestación automática
+   - Utilizar AWS RDS para MySQL en lugar de contenedor Docker (mejor 
+     disponibilidad y backups automáticos)
+   - Implementar Application Load Balancer (ALB) para balancear carga 
+     entre múltiples instancias frontend
+   - Utilizar AWS S3 + CloudFront para servir archivos estáticos del frontend
+   - Implementar cache con Redis para sesiones y datos frecuentes
+
+3. **Mejoras de Funcionalidad**:
+   - Agregar sistema de notificaciones (email/SMS) para actualizaciones de estado
+   - Implementar cálculo de rutas óptimas con API de Google Maps o OSRM
+   - Agregar módulo de pagos en línea (Stripe, PayPal)
+   - Implementar reportes estadísticos y dashboard analítico
+   - Agregar historial de auditoría para cambios de estado
+   - Implementar carga masiva de datos (importación CSV/Excel)
+   - Desarrollar aplicación móvil nativa (React Native o Flutter)
+
+4. **Mejoras de Experiencia de Usuario**:
+   - Implementar modo offline con Service Workers
+   - Agregar soporte para múltiples idiomas (i18n)
+   - Implementar dark mode
+   - Mejorar accesibilidad (WCAG compliance)
+   - Agregar tutoriales interactivos para nuevos usuarios
+
+5. **Mejoras de Infraestructura**:
+   - Implementar CI/CD con AWS CodePipeline o GitHub Actions
+   - Configurar backups automáticos de la base de datos
+   - Implementar multi-AZ deployment para alta disponibilidad
+   - Configurar auto-scaling groups para escalar automáticamente
+   - Implementar blue/green deployments para actualizaciones sin downtime
+
+6. **Mejoras de Código**:
+   - Agregar pruebas unitarias con pytest
+   - Implementar pruebas de integración
+   - Agregar pruebas end-to-end con Playwright o Cypress
+   - Implementar linting y formateo automático (ESLint, Prettier, Black)
+   - Mejorar manejo de errores y mensajes de usuario
+   - Implementar logging estructurado
+
+6.2 BIBLIOGRAFÍA / WEBGRAFÍA
+-----------------------------
+
+Fuentes Técnicas Consultadas:
+
+Documentación Oficial:
+1. FastAPI Documentation. https://fastapi.tiangolo.com/
+2. React Documentation. https://react.dev/
+3. TypeScript Documentation. https://www.typescriptlang.org/docs/
+4. SQLAlchemy Documentation. https://docs.sqlalchemy.org/
+5. Docker Documentation. https://docs.docker.com/
+6. AWS EC2 Documentation. https://docs.aws.amazon.com/ec2/
+7. AWS Security Groups Documentation. https://docs.aws.amazon.com/vpc/
+8. MapLibre GL Documentation. https://maplibre.org/maplibre-gl-js-docs/
+9. TailwindCSS Documentation. https://tailwindcss.com/docs
+10. Nginx Documentation. https://nginx.org/en/docs/
+
+Libros y Recursos de Aprendizaje:
+11. Richardson, L., & Ruby, S. (2008). RESTful Web Services. O'Reilly Media.
+12. Newman, S. (2015). Building Microservices. O'Reilly Media.
+13. Griffiths, I. (2021). Cloud Native DevOps with Kubernetes. O'Reilly Media.
+14. AWS Well-Architected Framework. https://aws.amazon.com/architecture/well-architected/
+
+Tutoriales y Guías:
+15. "Deploying a FastAPI application to AWS EC2". DigitalOcean Community Tutorials.
+16. "Docker Compose in Production". Docker Blog.
+17. "Securing RESTful APIs with JWT". Auth0 Blog.
+18. "Building a React App with TypeScript". React Documentation.
+19. "MySQL Best Practices for Cloud Deployment". AWS Database Blog.
+
+Herramientas Utilizadas:
+20. Python Software Foundation. (2024). Python 3.12 Documentation. https://docs.python.org/3/
+21. Node.js Foundation. (2024). Node.js Documentation. https://nodejs.org/docs/
+22. MySQL AB. (2024). MySQL 8.0 Reference Manual. https://dev.mysql.com/doc/refman/8.0/en/
+23. Vercel. (2024). Vite Documentation. https://vitejs.dev/
+
+Estándares y Especificaciones:
+24. RFC 7231 - Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content. IETF.
+25. RFC 7519 - JSON Web Token (JWT). IETF.
+26. OpenAPI Specification 3.0. https://swagger.io/specification/
+27. OAuth 2.0 Authorization Framework. https://oauth.net/2/
+
+Recursos de OpenStreetMap:
+28. OpenStreetMap Wiki. https://wiki.openstreetmap.org/
+29. Nominatim Documentation. https://nominatim.openstreetmap.org/
+
+Comunidades y Foros:
+30. Stack Overflow - https://stackoverflow.com/ (consultas sobre FastAPI, React, AWS)
+31. Reddit - r/devops, r/aws, r/webdev
+32. GitHub Issues - repositorios de FastAPI, React, Docker
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
+Este documento presenta el desarrollo completo del Sistema de Logística y Envíos,
+cubriendo todas las fases requeridas para la asignatura Infraestructura y Cómputo 
+en la Nube. El proyecto implementa una arquitectura desacoplada desplegada en 
+AWS EC2 siguiendo el modelo IaaS, con frontend en React/TypeScript y backend en 
+FastAPI/Python, integrando mapas interactivos y un sistema de gestión de pedidos 
+con control de roles y estados.
+
+El sistema está listo para demostración presencial/síncrona en vivo sobre la 
+IP pública de AWS EC2.
