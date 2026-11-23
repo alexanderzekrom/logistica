@@ -25,8 +25,12 @@ class UsuarioModel(Base):
     username = Column(String(50), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     rol = Column(SQLEnum(RolEnum), nullable=False)
-    id_ref = Column(Integer, nullable=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id_cliente", ondelete="CASCADE"), nullable=True)
+    conductor_id = Column(Integer, ForeignKey("conductores.id_conductor", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+
+    cliente = relationship("ClienteModel", back_populates="usuario")
+    conductor = relationship("ConductorModel", back_populates="usuario")
 
 class ClienteModel(Base):
     __tablename__ = "clientes"
@@ -38,6 +42,7 @@ class ClienteModel(Base):
     direccion = Column(Text, nullable=False)
 
     pedidos = relationship("PedidoModel", back_populates="cliente")
+    usuario = relationship("UsuarioModel", back_populates="cliente")
 
 class ConductorModel(Base):
     __tablename__ = "conductores"
@@ -49,6 +54,7 @@ class ConductorModel(Base):
     email = Column(String(100), nullable=True)
 
     pedidos = relationship("PedidoModel", back_populates="conductor")
+    usuario = relationship("UsuarioModel", back_populates="conductor")
 
 class VehiculoModel(Base):
     __tablename__ = "vehiculos"

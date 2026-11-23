@@ -46,16 +46,16 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "usuario": user.username,
         "nombre": _nombre_real(db, user),
         "rol": user.rol.value,
-        "id_ref": user.id_ref,
+        "id_ref": user.cliente_id if user.rol == RolEnum.CLIENTE else user.conductor_id if user.rol == RolEnum.CONDUCTOR else None,
     }
 
 def _nombre_real(db: Session, user: UsuarioModel) -> str:
-    if user.rol == RolEnum.CONDUCTOR and user.id_ref:
-        c = db.query(ConductorModel).filter(ConductorModel.id_conductor == user.id_ref).first()
+    if user.rol == RolEnum.CONDUCTOR and user.conductor_id:
+        c = db.query(ConductorModel).filter(ConductorModel.id_conductor == user.conductor_id).first()
         if c:
             return c.nombre
-    if user.rol == RolEnum.CLIENTE and user.id_ref:
-        cli = db.query(ClienteModel).filter(ClienteModel.id_cliente == user.id_ref).first()
+    if user.rol == RolEnum.CLIENTE and user.cliente_id:
+        cli = db.query(ClienteModel).filter(ClienteModel.id_cliente == user.cliente_id).first()
         if cli:
             return cli.nombre
     return user.username.capitalize()

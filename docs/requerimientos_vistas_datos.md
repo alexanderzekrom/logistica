@@ -43,12 +43,12 @@ SELECT
     u.id_usuario,
     u.username,
     u.rol,
-    u.id_ref,
+    COALESCE(u.cliente_id, u.conductor_id) AS id_ref,
     COALESCE(cl.nombre, co.nombre, 'Admin') AS nombre,  -- nombre real del cliente/conductor
     u.created_at
 FROM usuarios u
-LEFT JOIN clientes    cl ON cl.id_cliente    = u.id_ref AND u.rol = 'CLIENTE'
-LEFT JOIN conductores co ON co.id_conductor = u.id_ref AND u.rol = 'CONDUCTOR';
+LEFT JOIN clientes    cl ON cl.id_cliente    = u.cliente_id
+LEFT JOIN conductores co ON co.id_conductor = u.conductor_id;
 ```
 
 **Reglas:**
@@ -91,7 +91,7 @@ SELECT
     u.username AS usuario,   -- usuario de acceso generado
     u.id_usuario
 FROM conductores co
-LEFT JOIN usuarios u ON u.id_ref = co.id_conductor AND u.rol = 'CONDUCTOR';
+LEFT JOIN usuarios u ON u.conductor_id = co.id_conductor;
 ```
 
 **Reglas de fila:**

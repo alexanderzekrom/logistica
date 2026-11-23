@@ -51,7 +51,7 @@ def crear_conductor(conductor: ConductorBase, db: Session = Depends(get_db)) -> 
             username=username,
             password_hash=get_password_hash("123"),
             rol=RolEnum.CONDUCTOR,
-            id_ref=nuevo_conductor.id_conductor,
+            conductor_id=nuevo_conductor.id_conductor,
         )
         db.add(nuevo_usuario)
         db.commit()

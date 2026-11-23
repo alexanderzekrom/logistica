@@ -49,7 +49,7 @@ def registrar_cliente(registro: RegistroCliente, db: Session = Depends(get_db)):
             username=registro.username,
             password_hash=get_password_hash(registro.password),
             rol=RolEnum.CLIENTE,
-            id_ref=nuevo_cliente.id_cliente,
+            cliente_id=nuevo_cliente.id_cliente,
         )
         db.add(nuevo_usuario)
         db.commit()

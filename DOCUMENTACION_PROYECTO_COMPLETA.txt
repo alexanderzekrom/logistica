@@ -288,7 +288,16 @@ Internet
     v
 [Volumen Docker: Persistencia de datos MySQL]
 
-Security Groups:
+Security Groups y Configuración de Firewall:
+
+| Servidor / Instancia | Servicio | Puerto | Protocolo | Origen Permitido (CIDR / SG) | Justificación de Seguridad |
+|---------------------|----------|--------|-----------|------------------------------|----------------------------|
+| Servidor Web / Backend | SSH (Administración) | 22 | TCP | TU_IP_PUBLICA/32 | Acceso a consola restringido únicamente a la IP del administrador. |
+| Servidor Web / Backend | Frontend React | 8001 (o 80) | TCP | 0.0.0.0/0 (Público) | Permite el acceso web global a los clientes y conductores. |
+| Servidor Web / Backend | API FastAPI (Backend) | 8000 | TCP | 0.0.0.0/0 o sg-frontend | Permite el consumo de la API REST desde el cliente o frontend. |
+| Servidor Base de Datos | MySQL Server | 3306 (interno) / 3307 | TCP | 172.31.0.0/16 (Solo VPC / Backend) | Bloqueado a Internet (0.0.0.0/0). Solo el backend puede conectarse a la base de datos. |
+
+Detalles por Security Group:
 
 SG-FRONTEND:
 - Regla de entrada: TCP 80 desde 0.0.0.0/0 (Internet)
@@ -352,17 +361,18 @@ Frontend (React):
 +----------------+       +----------------+
 |   USUARIOS     |       |   CLIENTES     |
 +----------------+       +----------------+
-| id_usuario (PK)|<----->| id_cliente (PK)|
-| username       |       | nombre         |
+| id_usuario (PK)|       | id_cliente (PK)|
+| username       |<------| nombre         |
 | password_hash  |       | telefono       |
 | rol            |       | email         |
-| id_ref (FK)    |       | direccion      |
-| created_at     |       +----------------+
+| cliente_id (FK)|       | direccion      |
+| conductor_id(FK)|      +----------------+
+| created_at     |                |
 +----------------+                |
-                                  | 1
-                                  |
-                                  | N
-                                  |
+         | 1                      | 1
+         |                        |
+         | N                      | N
+         |                        |
 +----------------+       +----------------+       +----------------+
 |   CONDUCTORES  |       |    PEDIDOS     |       |   VEHICULOS    |
 +----------------+       +----------------+       +----------------+
@@ -378,11 +388,11 @@ Frontend (React):
                          +----------------+
 
 Relaciones:
-- USUARIOS.id_ref -> CLIENTES.id_cliente (1:1 para rol CLIENTE)
-- USUARIOS.id_ref -> CONDUCTORES.id_conductor (1:1 para rol CONDUCTOR)
-- PEDIDOS.id_cliente -> CLIENTES.id_cliente (N:1)
-- PEDIDOS.id_conductor -> CONDUCTORES.id_conductor (N:1, opcional)
-- PEDIDOS.id_vehiculo -> VEHICULOS.id_vehiculo (N:1, opcional)
+- USUARIOS.cliente_id -> CLIENTES.id_cliente (1:1 opcional para rol CLIENTE, ON DELETE CASCADE)
+- USUARIOS.conductor_id -> CONDUCTORES.id_conductor (1:1 opcional para rol CONDUCTOR, ON DELETE CASCADE)
+- PEDIDOS.id_cliente -> CLIENTES.id_cliente (N:1, ON DELETE RESTRICT)
+- PEDIDOS.id_conductor -> CONDUCTORES.id_conductor (N:1, opcional, ON DELETE SET NULL)
+- PEDIDOS.id_vehiculo -> VEHICULOS.id_vehiculo (N:1, opcional, ON DELETE SET NULL)
 
 3.3.2 Diccionario de Datos
 
@@ -399,9 +409,12 @@ Tabla: USUARIOS
 - rol: ENUM('ADMIN', 'CONDUCTOR', 'CLIENTE') NOT NULL
   * Descripción: Rol de acceso del usuario
   * Restricciones: No nulo, solo valores permitidos
-- id_ref: INT NULL
-  * Descripción: ID de referencia en tabla clientes o conductores
-  * Restricciones: Nulo para ADMIN, referencia a cliente o conductor para otros roles
+- cliente_id: INT NULL
+  * Descripción: ID del cliente asociado (solo para rol CLIENTE)
+  * Restricciones: Nulo para ADMIN y CONDUCTOR, FK a clientes(id_cliente), ON DELETE CASCADE
+- conductor_id: INT NULL
+  * Descripción: ID del conductor asociado (solo para rol CONDUCTOR)
+  * Restricciones: Nulo para ADMIN y CLIENTE, FK a conductores(id_conductor), ON DELETE CASCADE
 - created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   * Descripción: Fecha y hora de creación del registro
   * Restricciones: Automático
@@ -479,6 +492,36 @@ Tabla: PEDIDOS
 - created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   * Descripción: Fecha y hora de creación del pedido
   * Restricciones: Automático
+
+3.3.3 Reglas de Transición de Estado de Pedidos
+
+El sistema implementa un control estricto de transiciones de estado para garantizar la integridad del flujo de entrega. Las transiciones permitidas son:
+
+| Estado Actual | Estados Permitidos | Descripción |
+|---------------|-------------------|-------------|
+| PENDIENTE | ASIGNADO, CANCELADO | Puede asignarse recursos o cancelarse por el cliente |
+| ASIGNADO | EN_CAMINO, INCIDENCIA, CANCELADO | Conductor inicia ruta, reporta problema o se cancela |
+| EN_CAMINO | ENTREGADO, INCIDENCIA | Pedido entregado o reporta incidencia en ruta |
+| ENTREGADO | - (Estado Final) | No permite más transiciones |
+| INCIDENCIA | ASIGNADO, CANCELADO | Reasignado o cancelado tras incidencia |
+| CANCELADO | - (Estado Final) | No permite más transiciones |
+
+Permisos por Rol para Cambios de Estado:
+
+| Estado | ADMIN | CONDUCTOR | CLIENTE |
+|--------|-------|-----------|---------|
+| PENDIENTE | SI | NO | SI (solo cancelar) |
+| ASIGNADO | SI | SI | NO |
+| EN_CAMINO | SI | SI | NO |
+| ENTREGADO | SI | SI | NO |
+| INCIDENCIA | SI | SI | NO |
+| CANCELADO | SI | NO | NO |
+
+Validaciones Especiales:
+- **EN_CAMINO**: Requiere que el pedido tenga conductor y vehículo asignados
+- **ASIGNADO**: Requiere que el pedido tenga conductor y vehículo asignados
+- **CANCELADO**: Solo permitido desde PENDIENTE (por cliente) o desde ASIGNADO/INCIDENCIA (por admin)
+- **Transiciones inversas**: No permitidas (ej. de ENTREGADO a PENDIENTE)
 
 3.4 DISEÑO DE INTERFACES (MOCKUPS)
 -----------------------------------

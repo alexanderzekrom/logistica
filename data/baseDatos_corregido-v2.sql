@@ -3,13 +3,16 @@ CREATE DATABASE IF NOT EXISTS logistica_db;
 USE logistica_db;
 
 -- 1. Tabla Usuarios (Autenticación y Seguridad)
-CREATE TABLE IF NOT EXISTS usuarios ( 
-    id_usuario INT AUTO_INCREMENT PRIMARY KEY, 
-    username VARCHAR(50) NOT NULL UNIQUE, 
-    password_hash VARCHAR(255) NOT NULL, 
-    rol ENUM('ADMIN', 'CONDUCTOR', 'CLIENTE') NOT NULL, 
-    id_ref INT NULL, -- Id asociado en la tabla clientes o conductores 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+CREATE TABLE IF NOT EXISTS usuarios (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    rol ENUM('ADMIN', 'CONDUCTOR', 'CLIENTE') NOT NULL,
+    cliente_id INT NULL,
+    conductor_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usuario_cliente FOREIGN KEY (cliente_id) REFERENCES clientes(id_cliente) ON DELETE CASCADE,
+    CONSTRAINT fk_usuario_conductor FOREIGN KEY (conductor_id) REFERENCES conductores(id_conductor) ON DELETE CASCADE
 );
 
 -- 2. Tabla Clientes
@@ -74,10 +77,10 @@ INSERT INTO vehiculos (id_vehiculo, placa, tipo, capacidad) VALUES
 (2, 'P-987654', 'Panel Van', '1200 kg');
 
 -- Usuarios (Contraseñas en texto plano sin encriptación/hashing)
-INSERT INTO usuarios (username, password_hash, rol, id_ref) VALUES
-('admin', '123', 'ADMIN', NULL), 
-('rsilva', '123', 'CONDUCTOR', 1),
-('jperez', '123', 'CLIENTE', 1);
+INSERT INTO usuarios (username, password_hash, rol, cliente_id, conductor_id) VALUES
+('admin', '123', 'ADMIN', NULL, NULL),
+('rsilva', '123', 'CONDUCTOR', NULL, 1),
+('jperez', '123', 'CLIENTE', 1, NULL);
 
 -- Pedidos Iniciales
 INSERT INTO pedidos (id_pedido, id_cliente, id_conductor, id_vehiculo, direccion, latitud, longitud, estado) VALUES 
